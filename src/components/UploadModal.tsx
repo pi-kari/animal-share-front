@@ -2,7 +2,12 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Image as ImageIcon, ChevronDown } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -11,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TagChip } from "./TagChip";
 import { apiRequest } from "@/lib/queryClient";
 import type { Tag, CreatePostData, TagCategory } from "@/types";
+import { API } from "@/types/api";
 
 /* =========================
    ユーティリティ：必ず配列にする
@@ -54,7 +60,9 @@ function TagSection({
         <span className="text-sm font-medium">
           {title} {required && <span className="text-primary">*</span>}
         </span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
       {open && (
         <div className="px-3 pb-3">
@@ -126,7 +134,10 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
       return await apiRequest("/api/posts", { method: "POST", json: data });
     },
     onSuccess: () => {
-      toast({ title: "投稿完了", description: "投稿が正常にアップロードされました。" });
+      toast({
+        title: "投稿完了",
+        description: "投稿が正常にアップロードされました。",
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
       handleClose();
     },
@@ -171,7 +182,9 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId]
     );
   };
 
@@ -181,21 +194,18 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   };
 
   const uploadToCloudinary = async (file: File): Promise<string> => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !uploadPreset) throw new Error("Cloudinary configuration missing");
-
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
 
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: "POST", body: formData }
+    const res = await apiRequest<API.Upload_Res>(
+      `${import.meta.env?.VITE_API_BASE_URL}/api/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
     );
     if (!res.ok) throw new Error("Failed to upload image");
-    const data = await res.json();
-    return data.secure_url as string;
+    return res.secure_url;
   };
 
   // カテゴリ別
@@ -262,7 +272,9 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
         <div className="space-y-4">
           {/* 画像：スマホさらに小さめ */}
           <div>
-            <Label className="text-sm font-medium text-gray-700 mb-1 block">画像</Label>
+            <Label className="text-sm font-medium text-gray-700 mb-1 block">
+              画像
+            </Label>
             {previewUrl ? (
               <div className="relative">
                 <img
@@ -287,9 +299,15 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <ImageIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm font-medium text-gray-700 mb-1">写真をドラッグ&ドロップ</p>
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  写真をドラッグ&ドロップ
+                </p>
                 <p className="text-xs text-gray-500 mb-2">または</p>
-                <Button type="button" size="sm" className="bg-primary hover:bg-primary/90">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90"
+                >
                   ファイルを選択
                 </Button>
               </div>
@@ -305,7 +323,10 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
 
           {/* キャプション */}
           <div>
-            <Label htmlFor="caption" className="text-sm font-medium text-gray-700 mb-1 block">
+            <Label
+              htmlFor="caption"
+              className="text-sm font-medium text-gray-700 mb-1 block"
+            >
               キャプション（任意）
             </Label>
             <Textarea

@@ -8,6 +8,7 @@ import { PostDetailModal } from "@/components/PostDetailModal";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import type { PostWithTags } from "@/types";
+import { Link, useLocation } from "wouter";
 
 export function Profile() {
   const { user } = useAuth();
@@ -21,7 +22,9 @@ export function Profile() {
     queryKey: ["/api/posts", { userId }],
     queryFn: async () => {
       try {
-        return await apiRequest<PostWithTags[]>(`/api/posts?userId=${encodeURIComponent(userId)}`);
+        return await apiRequest<PostWithTags[]>(
+          `/api/posts?userId=${encodeURIComponent(userId)}`
+        );
       } catch {
         return []; // 失敗してもUIは保つ
       }
@@ -36,8 +39,21 @@ export function Profile() {
   );
 
   // 表示用のプロフィール情報（空でも落ちない）
-  const displayName = user?.firstName || user?.name || user?.email || "ユーザー";
+  const displayName =
+    user?.lastName?.concat(" ", user?.firstName ?? "") ||
+    user?.email ||
+    "ユーザー";
   const avatar = user?.profileImageUrl || user?.avatarUrl;
+
+  const [, setLocation] = useLocation();
+  const handleLogout = async () => {
+    await fetch(`${import.meta.env?.VITE_API_BASE_URL}/api/auth/logout`, {
+      method: "POST",
+    });
+    setTimeout(() => {
+      setLocation("/");
+    }, 1000);
+  };
 
   return (
     <div className="min-h-screen bg-neutral-bg pb-28 md:pb-32">
@@ -49,13 +65,19 @@ export function Profile() {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary overflow-hidden grid place-items-center">
               {avatar ? (
-                <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
+                <img
+                  src={avatar}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <span className="text-white text-2xl">👤</span>
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-neutral-dark">{displayName}</h1>
+              <h1 className="text-2xl font-bold text-neutral-dark">
+                {displayName}
+              </h1>
               <div className="mt-1 flex items-center gap-6 text-center">
                 <div>
                   <div className="text-lg font-semibold">{posts.length}</div>
@@ -75,8 +97,15 @@ export function Profile() {
 
           {/* 設定/ログアウトなどの導線は必要に応じて */}
           <div className="text-sm text-neutral-medium space-x-4">
-            <a href="/settings" className="hover:underline">設定</a>
-            {/* <a href="/api/logout" className="hover:underline">ログアウト</a> */}
+            <Link href="/settings" className="hover:underline">
+              設定
+            </Link>
+            <a
+              onClick={handleLogout}
+              className="hover:underline hover:cursor-pointer"
+            >
+              ログアウト
+            </a>
           </div>
         </section>
 
@@ -92,7 +121,10 @@ export function Profile() {
             <ImageGrid
               posts={posts}
               isLoading={isLoading}
-              onPostClick={(p) => { setSelectedPost(p); setIsPostDetailOpen(true); }}
+              onPostClick={(p) => {
+                setSelectedPost(p);
+                setIsPostDetailOpen(true);
+              }}
               showEmptyState
             />
           )}

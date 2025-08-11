@@ -25,9 +25,7 @@ export function Home() {
 
   const handleTagToggle = (tagId: string) => {
     setSelectedTagIds((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
     );
   };
 
@@ -43,30 +41,17 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-neutral-bg pb-28 md:pb-32">
-      <Header
-        onSearch={handleSearch}
-        onOpenUpload={() => setIsUploadModalOpen(true)}
-      />
+      <Header onSearch={handleSearch} onOpenUpload={() => setIsUploadModalOpen(true)} />
 
       <main className="pt-16">
-        <TagFilterBar
-          selectedTagIds={selectedTagIds}
-          onTagToggle={handleTagToggle}
-        />
+        <TagFilterBar selectedTagIds={selectedTagIds} onTagToggle={handleTagToggle} />
 
-        <ImageGrid
-          posts={posts}
-          onPostClick={handlePostClick}
-          isLoading={isLoading}
-        />
+        <ImageGrid posts={posts} onPostClick={handlePostClick} isLoading={isLoading} />
       </main>
 
       <BottomNavigation onOpenUpload={() => setIsUploadModalOpen(true)} />
 
-      <UploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-      />
+      <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} />
 
       <PostDetailModal
         post={selectedPost}

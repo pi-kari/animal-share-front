@@ -19,12 +19,12 @@ export type UserLite = {
 export type Post = {
   id: string;
   imageUrl: string;
-  publicId?: string;        // Cloudinary 用（後で使う）
+  publicId?: string; // Cloudinary 用（後で使う）
   width?: number;
   height?: number;
   format?: string;
   caption?: string;
-  createdAt: string;        // ISO
+  createdAt: string; // ISO
   userId: string;
 };
 
@@ -53,7 +53,9 @@ export namespace API {
 
   // POST /api/posts
   export type CreatePost_Req = CreatePostReq;
-  export type CreatePost_Res = { ok: true; post?: PostWithTags } | { ok: false; error: string };
+  export type CreatePost_Res =
+    | { ok: true; post?: PostWithTags }
+    | { ok: false; error: string };
 
   // GET /api/favorites
   export type GetFavorites_Res = PostWithTags[];
@@ -73,4 +75,6 @@ export namespace API {
 
   // GET /api/auth/me
   export type GetMe_Res = UserLite | null;
+
+  export type Upload_Res = { ok: boolean; secure_url: string };
 }

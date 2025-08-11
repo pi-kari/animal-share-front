@@ -4,7 +4,10 @@ import { apiRequest } from "@/lib/queryClient";
 
 type AuthUser = {
   id: string;
-  name: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
   avatarUrl?: string;
 };
 
@@ -16,7 +19,9 @@ type AuthState = {
 
 const MOCK_USER: AuthUser = {
   id: "preview-user",
-  name: "プレビュー太郎",
+  email: "taro@example.com",
+  firstName: "プレビュー太郎",
+  lastName: "太郎",
   avatarUrl: "https://avatars.githubusercontent.com/u/9919?v=4",
 };
 
