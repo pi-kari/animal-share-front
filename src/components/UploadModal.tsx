@@ -335,7 +335,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
               placeholder="この写真について教えてください..."
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              className="resize-none"
+              className="resize-none w-full"
             />
           </div>
 

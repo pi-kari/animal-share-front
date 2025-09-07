@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "@/components/Logo";
 
 export default function Login() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -47,7 +48,7 @@ export default function Login() {
       <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-lg p-6 text-center">
         <div className="text-6xl mb-3">🐾</div>
         <h1 className="text-2xl font-bold text-neutral-dark mb-2">
-          AnimalShare へようこそ
+          <Logo /> へようこそ
         </h1>
         <p className="text-neutral-medium mb-6">
           かわいい動物写真を投稿・お気に入り登録・タグ検索できます。

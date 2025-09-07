@@ -38,7 +38,7 @@ export function Landing() {
       {/* Features Section */}
       <div className="container mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center text-neutral-dark mb-12">
-          AnimalShareの特徴
+          カクミルの特徴
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Heart, Plus, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "./Logo";
 
 type Props = {
   onSearch?: (q: string) => void;
@@ -18,8 +19,8 @@ export function Header({ onSearch, onOpenUpload }: Props) {
   return (
     <header className="fixed top-0 inset-x-0 z-40 bg-white/80 backdrop-blur border-b border-gray-200">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-3">
-        <Link href="/" className="text-xl font-extrabold text-primary">
-          AnimalShare
+        <Link href="/">
+          <Logo />
         </Link>
 
         <div className="flex-1">

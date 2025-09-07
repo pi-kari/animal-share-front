@@ -94,7 +94,7 @@ export function PostDetailModal({
 
     try {
       await navigator.share({
-        title: "AnimalShare - 動物写真",
+        title: "カクミル - 動物写真",
         text: post.caption || "可愛い動物の写真をシェア！",
         url: window.location.href,
       });
