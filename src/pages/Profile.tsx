@@ -15,18 +15,32 @@ export function Profile() {
   const [selectedPost, setSelectedPost] = useState<PostWithTags | null>(null);
   const [isPostDetailOpen, setIsPostDetailOpen] = useState(false);
 
-  const userId = user?.id ?? "preview-user";
-
-  // このユーザーの投稿だけ取得
-  const { data, isLoading, isError } = useQuery<PostWithTags[] | unknown>({
-    queryKey: ["/api/posts", { userId }],
+  // NOTE:
+  // - 認証済みユーザー（自分）のページ表示は /api/user/posts を叩う
+  // - 非ログイン（プレビュー）時は空配列を表示（必要ならモックを返す）
+  const {
+    data = [],
+    isLoading,
+    isError,
+  } = useQuery<PostWithTags[] | unknown>({
+    queryKey: [
+      user ? "/api/user/posts" : "/profile/preview/posts",
+      user?.id ?? "preview",
+    ],
+    // 有効化: user がいるときのみサーバーの /api/user/posts を叩く
+    enabled: true,
     queryFn: async () => {
       try {
-        return await apiRequest<PostWithTags[]>(
-          `/api/posts?userId=${encodeURIComponent(userId)}`
-        );
+        if (user) {
+          // 認証済みユーザーの投稿（サーバー側ルートが isAuthenticated を要求）
+          return await apiRequest<PostWithTags[]>("/api/user/posts");
+        } else {
+          // プレビュー用（未ログイン時）: 空配列を返す / またはモックを返す
+          // 既存実装が preview-user を使っていたため混在が起きていたので避ける
+          return [] as PostWithTags[];
+        }
       } catch {
-        return []; // 失敗してもUIは保つ
+        return [] as PostWithTags[];
       }
     },
     staleTime: 30_000,
