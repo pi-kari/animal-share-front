@@ -15,7 +15,6 @@ import type { Tag } from "@/types";
 
 /* ================== 定数/型ユーティリティ ================== */
 
-// あなたの Tag 型が '分類' | '角度' | 'パーツ' | '自由' の Union でない場合でも安全に動くように定義
 const CATEGORIES = ["分類", "角度", "パーツ", "自由"] as const;
 type Category = (typeof CATEGORIES)[number];
 
@@ -23,7 +22,6 @@ function isCategory(x: unknown): x is Category {
   return typeof x === "string" && (CATEGORIES as readonly string[]).includes(x);
 }
 
-// 必ず Tag 形に整える（createdAt を補完）
 function toTagArray(x: unknown): Tag[] {
   const now = new Date().toISOString();
   if (!Array.isArray(x)) return [];
@@ -36,7 +34,7 @@ function toTagArray(x: unknown): Tag[] {
         id: String(o?.id ?? crypto.randomUUID()),
         name: String(o?.name ?? "タグ"),
         category,
-        createdAt: String(o?.createdAt ?? now), // ★ Tag の必須プロパティを満たす
+        createdAt: String(o?.createdAt ?? now),
       } as Tag;
     });
 }
@@ -67,13 +65,11 @@ function arraysEqual(a: string[], b: string[]) {
 export function Settings() {
   const { toast } = useToast();
 
-  // プロフィール（ダミー）
   const NAME_MAX = 30;
   const BIO_MAX = 160;
   const [name, setName] = useState("プレビュー太郎");
   const [bio, setBio] = useState("どうぶつ大好き！ねこ派です。");
 
-  // タグ取得（必ず Tag[] に整形）
   const {
     data: tagsData,
     isLoading: isTagsLoading,
@@ -86,7 +82,6 @@ export function Settings() {
         return toTagArray(res);
       } catch {
         const now = new Date().toISOString();
-        // ★ モックも Tag 形（createdAt 含む）
         const mock: Tag[] = [
           { id: "t-neko", name: "猫", category: "分類", createdAt: now },
           { id: "t-inu", name: "犬", category: "分類", createdAt: now },
@@ -111,41 +106,52 @@ export function Settings() {
   const allTags: Tag[] = useMemo(() => toTagArray(tagsData), [tagsData]);
   const byCat = useMemo(() => groupByCategory(allTags), [allTags]);
 
-  // 除外タグ
+  // 除外タグ（サーバーから来る配列は毎回新しいインスタンスになりがちなので
+  // 単純な参照チェックでは無限ループを起こすことがある）
   const { excludedIds: serverExcluded, isLoading: isExcludedLoading } =
     useExcludedTags();
   const [excludedIds, setExcludedIds] = useState<string[]>([]);
   const initialRef = useRef<string[] | null>(null);
+  // ローカルで編集済みフラグ（ユーザーが操作したら true）
+  const [isDirty, setIsDirty] = useState(false);
 
+  // 初回ロード時のみサーバーの値で初期化し、それ以降はユーザーが操作していなければ
+  // サーバーの変更を同期する。ユーザーがローカルで変更している最中は上書きしない。
   useEffect(() => {
-    if (!isExcludedLoading) {
-      // 配列の中身が変わっている場合のみ更新する
-      const isEqual =
-        serverExcluded.length === excludedIds.length &&
-        serverExcluded.every((id, i) => id === excludedIds[i]);
+    if (isExcludedLoading) return;
 
-      if (!isEqual) {
-        setExcludedIds(serverExcluded);
-      }
+    const server = Array.isArray(serverExcluded) ? serverExcluded : [];
 
-      if (initialRef.current === null) {
-        initialRef.current = serverExcluded;
-      }
+    // 初回ロード: サーバー値で初期化
+    if (initialRef.current === null) {
+      setExcludedIds(server);
+      initialRef.current = server;
+      return;
     }
-  }, [serverExcluded, isExcludedLoading]);
 
-  const toggleExclude = (id: string) =>
+    // ユーザーがローカルで変更しているなら上書きしない
+    if (isDirty) return;
+
+    // それ以外はサーバーの更新があれば同期（中身が同じなら更新しない）
+    setExcludedIds((prev) => (arraysEqual(prev, server) ? prev : server));
+  }, [serverExcluded, isExcludedLoading, isDirty]);
+
+  const toggleExclude = (id: string) => {
     setExcludedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+    setIsDirty(true);
+  };
 
   const selectAllIn = (cat: Category) => {
     const ids = byCat[cat].map((t) => t.id);
     setExcludedIds((prev) => Array.from(new Set([...prev, ...ids])));
+    setIsDirty(true);
   };
   const clearIn = (cat: Category) => {
     const ids = new Set(byCat[cat].map((t) => t.id));
     setExcludedIds((prev) => prev.filter((x) => !ids.has(x)));
+    setIsDirty(true);
   };
 
   const saveZoning = useSaveExcludedTags();
@@ -155,8 +161,11 @@ export function Settings() {
 
   const handleSaveZoning = async () => {
     try {
-      await saveZoning.mutateAsync(excludedIds);
+      // saveZoning はフック側で API に送る実装を想定
+      // フックの実装によっては { tagIds } を期待しているためオブジェクトで送る
+      await saveZoning.mutateAsync({ tagIds: excludedIds });
       initialRef.current = excludedIds;
+      setIsDirty(false);
       toast({
         title: "保存しました",
         description: "ゾーニング設定を更新しました。",
@@ -315,7 +324,7 @@ export function Settings() {
                   {byCat[cat].map((tag) => (
                     <TagChip
                       key={tag.id}
-                      tag={tag} // Tag 型を満たすのでOK（createdAtあり）
+                      tag={tag}
                       isSelected={excludedIds.includes(tag.id)}
                       onClick={() => toggleExclude(tag.id)}
                     />

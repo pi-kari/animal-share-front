@@ -35,10 +35,11 @@ export function useExcludedTags() {
 export function useSaveExcludedTags() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (tagIds: string[]) =>
+    // payload は { tagIds: string[] } を期待する
+    mutationFn: (payload: { tagIds: string[] }) =>
       apiRequest<API.SaveExcludedTags_Res>("/api/exclude-tags", {
         method: "POST",
-        json: { tagIds },
+        json: { tagIds: payload.tagIds },
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/exclude-tags"] });
